@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Task runNLS="never" schemaVersion="3.0">
+    <Registration>
+        <Name>load2CAS</Name>
+        <Description>Demonstrates load2CAS using the Common Task Model functionality.</Description>
+        <GUID>C6AC34BD-D14A-4CF5-BF2F-A110711BF819</GUID>
+        <Procedures>PRINT</Procedures>
+        <Version>3.3</Version>
+        <Links>
+            <Link href="http://www.sas.com">SAS Home page</Link>
+        </Links>
+        <Category>GITHUB</Category>
+    </Registration>
+    <Metadata>
+        <!--- Define the task options.             -->
+        <Options>
+            <Option inputType="string" name="OPTIONSTAB">OPTIONS</Option>
+            <Option inputType="string" name="GROUPTEXT">TEXT FIELDS</Option>
+            <Option inputType="string" name="MyVar1">An example of a text.</Option>
+            <Option defaultValue="&quot;pdcesx16042.exnet.sas.com&quot;" 
+				inputType="inputtext"
+            	missingMessage="Missing text."
+                name="MyVar1" 
+                promptMessage="Enter Remote CAS Server." required="true">Enter Remote CAS Server:</Option>
+  
+            <Option inputType="string" name="MyVar2">An example of a text.</Option>
+            <Option defaultValue="PUBLIC" 
+				inputType="inputtext"
+            	missingMessage="Missing text."
+                name="MyVar2" 
+                promptMessage="Enter Library." required="true">Enter Library:</Option>
+  
+            <Option inputType="string" name="MyVar3">An example of a text.</Option>
+            <Option defaultValue="MYGOOGLEDATA_WIDE1" 
+				inputType="inputtext"
+            	missingMessage="Missing text."
+                name="MyVar3" 
+                promptMessage="Enter a Dataset to load." required="true">Enter a Dataset to load:</Option>               
+        </Options>
+    </Metadata>
+    <!--- Define the UI for task options                         -->
+    <!--- The UI engine will determine the best respresentation. -->
+    <UI>
+        <Container option="OPTIONSTAB">
+		   <!--- Define the UI for task options                         
+			-->
+            <Group option="GROUPTEXT">
+                <OptionItem option="MyVar1"/>
+                <OptionItem option="MyVar2"/>
+                <OptionItem option="MyVar3"/>
+            </Group>
+        </Container>
+    </UI>
+    <!--- Define the velocity code template.        -->
+    <CodeTemplate><![CDATA[
+%macro load2CAS(TargetHostName=, LibName=, DSName=);
+/***********************************************************************************/
+/* Program Name: load2CAS                                                          */
+/* Date Created: 09/15/2020                                                        */
+/* Author: 	Manuel Figallo                                                         */
+/* Purpose: load data to SAS Viya CAS (Cloud Analytic Services                     */
+/*                                                                                 */
+/* ------------------------------------------------------------------------------- */
+/*                                                                                 */
+/* Input(s): TargetHostName is the Target CAS Server Name                          */
+/*           LibName is the target CAS library        							   */
+/*           DSName is the name of the dataset                                     */
+/*                                                                                 */
+/* ---------------------THE SECTION BELOW IS FOR FUTURE ENHANCEMENTS-------------- */
+/* Date Modified: TBD                                                              */
+/* Modified by: TBD                                                                */
+/* Reason for Modification: TBD                                                    */
+/* Modification Made: TBD                                                          */
+/***********************************************************************************/
+
+		%let TargetHostName2=&TargetHostName;
+		%let TargetHostName3=%SYSFUNC(STRIP(%QSYSFUNC(TRANWRD(&TargetHostName2, %str(%"), %str()))));
+	
+		options comamid=TCP;
+		%let local=&TargetHostName3 17551;
+
+		data _null_; 
+		   signon local user='sasdemo' password="Orion123" noscript;
+		run;
+
+		%syslput targethostname2_0=&TargetHostName2;
+		%syslput Dataset1_0=&DSName;
+		%syslput Lib1_0=&LibName;
+		  
+		rsubmit local;   options validmemname=EXTEND validvarname=ANY;
+		   libname &Lib1_0 CAS  CASLIB=&Lib1_0 SERVER=&targethostname2_0 PORT=5570 ;
+		   proc datasets lib=&Lib1_0 nolist nowarn memtype=(data view);
+			   delete &Dataset1_0;
+		   quit;
+		   proc upload data=&Dataset1_0 out=&Lib1_0..&Dataset1_0 (PROMOTE=YES);  
+		   run;
+		endrsubmit;
+
+		data _null_; 
+		   signoff local;
+		run;
+
+%mend load2CAS;
+
+%let MyInputVariableName1=$MyVar1;
+%let MYBOOLEANVAR1=$MyVar2;
+%load2CAS(TargetHostName=&MyInputVariableName1, LibName=&MYBOOLEANVAR1, DSName=$MyVar3)
+
+/* Just open the dataset for now. */
+%web_open_table($MyVar3);
+
+		]]></CodeTemplate>
+</Task>

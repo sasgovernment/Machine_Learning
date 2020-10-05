@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Task runNLS="never" schemaVersion="3.0">
+    <Registration>
+        <Name>extractSnowflakeData</Name>
+        <Description>Demonstrates extractSnowflakeData using the Common Task Model functionality.</Description>
+        <GUID>C6AC34BD-D14A-4CF5-BF2F-A110711BF819</GUID>
+        <Procedures>PRINT</Procedures>
+        <Version>3.3</Version>
+        <Links>
+            <Link href="http://www.sas.com">SAS Home page</Link>
+        </Links>
+        <Category>GITHUB</Category>
+    </Registration>
+    <Metadata>
+        <!--- Define the task options.             -->
+        <Options>
+            <Option inputType="string" name="OPTIONSTAB">OPTIONS</Option>
+            <Option inputType="string" name="GROUPTEXT">TEXT FIELDS</Option>
+            <Option inputType="string" name="labelVALIDATIONTEXT0">Assign input variables in this section.</Option>
+            <Option defaultValue="CMS_DATA" 
+            	inputType="inputtext"
+            	missingMessage="Missing text."
+                name="validationtextBD0" 
+                promptMessage="Enter a Google API call." required="true">Enter Snowflake data tablename:</Option>
+  
+            <Option inputType="string" name="labelTEXT1">Input variables are passed into an interface to produce output.</Option>
+            <Option defaultValue="work.mySnowflakeData" indent="0"
+                inputType="inputtext" 
+                missingMessage="Missing text."
+                name="textSF1" 
+                promptMessage="Enter Output Lookup Table." required="true">Enter output SAS dataset:</Option>
+                
+        </Options>
+    </Metadata>
+    <!--- Define the UI for task options                         -->
+    <!--- The UI engine will determine the best representation. -->
+    <UI>
+        <Container option="OPTIONSTAB">
+            <Group option="GROUPTEXT">
+                <OptionItem option="labelVALIDATIONTEXT0"/>
+                <OptionItem option="validationtextBD0"/>
+                <OptionItem option="labelTEXT1"/>
+                <OptionItem option="textSF1"/>
+            </Group>
+        </Container>
+    </UI>
+    <!--- Define the velocity code template.        -->
+    <CodeTemplate><![CDATA[
+
+options noxwait mprint mlogic;
+options noquotelenmax;
+
+%macro extractSnowflakeData(remoteSnowflakeData=, localDataset=);
+/***********************************************************************************/
+/* Program Name: extractSnowflakeData                                              */
+/* Date Created: 09/22/2020                                                        */
+/* Author: 	Manuel Figallo                                                         */
+/* Purpose: extract data from a Snowflake Warehouse                                */
+/*                                                                                 */
+/* ------------------------------------------------------------------------------- */
+/*                                                                                 */
+/* Input(s): remoteSnowflakeData is the name of the data table in Snowflake.       */
+/* 			 Requires installation of the ODBC driver:   				           */
+/* https://docs.snowflake.com/en/user-guide/odbc-download.html					   */
+/*                    															   */
+/* Output(s): localDataset is the dataset with all data from Snowflake query       */
+/*                                                                                 */
+/* ---------------------THE SECTION BELOW IS FOR FUTURE ENHANCEMENTS-------------- */
+/* Date Modified: TBD                                                              */
+/* Modified by: TBD                                                                */
+/* Reason for Modification: TBD                                                    */
+/* Modification Made: TBD                                                          */
+/***********************************************************************************/
+		
+	%let mysource1=&remoteSnowflakeData;
+	%let mytarget1=&localDataset;
+
+	libname sfawdw6 odbc 
+	noprompt="driver={SnowflakeDSIIDriver};server=demo2.snowflakecomputing.com; 
+	warehouse=SAS_WH; database=SAS_TEST; Uid=manuel; Pwd=ChangeMe123!;" schema=PUBLIC;
+
+	data &mytarget1;
+		set sfawdw6.&mysource1;
+		*if _N_ > 100 then delete;
+	run;
+	
+%mend extractSnowflakeData;
+
+%let mySnowflakeDat=$validationtextBD0;
+%let myDSOutput=$textSF1;
+
+%extractSnowflakeData(remoteSnowflakeData=&mySnowflakeDat, localDataset=&myDSOutput)
+
+/* Just open the dataset for now. */
+%web_open_table($textSF1);
+
+		]]></CodeTemplate>
+</Task>
