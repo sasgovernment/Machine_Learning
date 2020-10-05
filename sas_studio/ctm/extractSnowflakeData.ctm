@@ -77,7 +77,7 @@ options noquotelenmax;
 
 	libname sfawdw6 odbc 
 	noprompt="driver={SnowflakeDSIIDriver};server=demo2.snowflakecomputing.com; 
-	warehouse=SAS_WH; database=SAS_TEST; Uid=manuel; Pwd=ChangeMe123!;" schema=PUBLIC;
+	warehouse=SAS_WH; database=SAS_TEST; Uid=manuel; Pwd=XXXXXXe123!;" schema=PUBLIC;
 
 	data &mytarget1;
 		set sfawdw6.&mysource1;
